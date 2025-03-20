@@ -11,8 +11,7 @@ public class KoktajleApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(KoktajleApplication.class, args);
-        SecurityConfigs config = new SecurityConfigs();
-        config.test();
+
     }
 
 }
