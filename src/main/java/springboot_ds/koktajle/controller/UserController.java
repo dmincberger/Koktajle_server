@@ -1,8 +1,10 @@
 package springboot_ds.koktajle.controller;
 
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +15,7 @@ import springboot_ds.koktajle.Service.UserServiceImpl;
 import springboot_ds.koktajle.dto.TokenResponseDto;
 import springboot_ds.koktajle.dto.UserRequestDto;
 import springboot_ds.koktajle.dto.UserResponseDto;
+import springboot_ds.koktajle.email.EmailService;
 
 import java.util.Map;
 import java.util.Optional;
@@ -28,10 +31,13 @@ public class UserController {
 
     private final UserServiceImpl userService;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
-    public UserController(){
+    public UserController(EmailService emailService){
+        this.emailService = emailService;
         this.userService = new UserServiceImpl();
-        this.passwordEncoder = new PasswordEncoder() {
+        this.passwordEncoder = new PasswordEncoder()
+        {
             @Override
             public String encode(CharSequence rawPassword) {
                 return "";
@@ -74,10 +80,11 @@ public class UserController {
 
             String token = JwtService.generateToken(userRequestDto.getEmail(), CONFIRMATION_TOKEN_EXPIRATION_TIME);
             String confirmationLink = BASE_URL + "/api/confirm?token=" + token;
-            String response = "AAAAAAAAAAAAAAAAAAAAAAAA";
-            UserResponseDto responseDto = new UserResponseDto(confirmationLink);
+            String response = "Mail z potwierdzeniem konta wysłany na pocztę. Masz 24 godziny.";
+            UserResponseDto responseDto = new UserResponseDto(response);
             ResponseEntity<UserResponseDto> responseObject = new ResponseEntity<UserResponseDto>(responseDto,HttpStatus.OK);
             System.out.println(responseObject);
+            emailService.sendEmail(userRequestDto.getEmail(),"POTWIERDZENIE KONTA",confirmationLink);
             return responseObject;
 
         } else {

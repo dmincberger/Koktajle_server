@@ -1,8 +1,10 @@
 package springboot_ds.koktajle.email;
 
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -16,7 +18,7 @@ public class EmailService {
         this.javaMailSender = javaMailSender;
     }
 
-
+    @Async
     public void sendEmail(String to, String subject, String body) {
         System.out.println("mail do: " + to);
 
@@ -24,7 +26,6 @@ public class EmailService {
         message.setTo(to);
         message.setSubject(subject);
         message.setText(body);
-
         javaMailSender.send(message);
         System.out.println("Mail sent");
     }
