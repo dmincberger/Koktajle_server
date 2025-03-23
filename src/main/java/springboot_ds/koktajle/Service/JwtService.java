@@ -1,4 +1,4 @@
-package springboot_ds.koktajle.Service;
+package springboot_ds.koktajle.service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -12,6 +12,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import io.jsonwebtoken.Jwts;
+import springboot_ds.koktajle.model.User;
 
 @Service
 public class JwtService {
@@ -33,14 +34,15 @@ public class JwtService {
                 .compact();
     }
 
-    public static Boolean validateToken(String token, UserDetails userDetails) {
+    public static Boolean validateToken(String token, User user) {
         Date expirationDate = getExpirationDateFromToken(token);
         assert expirationDate != null;
         if (expirationDate.before(new Date())) {
+            System.out.println("INVALID BO EXPIRATION JEST Z PRZESZLOSCI");
             return false;
         }
-        String username = getEmailFromToken(token);
-        return userDetails.getUsername().equals(username) && !expirationDate.before(new Date());
+        String email = getEmailFromToken(token);
+        return user.getEmail().equals(email) && !expirationDate.before(new Date());
     }
 
     public static String getEmailFromToken(String token) {

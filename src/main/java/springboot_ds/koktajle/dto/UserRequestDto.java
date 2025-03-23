@@ -13,11 +13,14 @@ public class UserRequestDto {
     @Size(min = 3, max = 10, message = "hasło musi mieć od 3 do 10 znaków")
     private String password = "";
 
+    private String username;
+
     private Boolean confirmed = false;
-    public UserRequestDto(String email, String password) {
+    public UserRequestDto(String email, String password, String username) {
         this.email = email;
         this.password = password;
         this.confirmed = false;
+        this.username = username;
     }
 
     public String getEmail() {
@@ -32,4 +35,7 @@ public class UserRequestDto {
         this.password = password;
     }
 
+    public String getUsername() {
+        return username;
+    }
 }

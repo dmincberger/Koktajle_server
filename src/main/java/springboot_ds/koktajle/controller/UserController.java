@@ -1,6 +1,8 @@
 package springboot_ds.koktajle.controller;
 
+import io.jsonwebtoken.Jwt;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,17 +12,25 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import springboot_ds.koktajle.Service.JwtService;
-import springboot_ds.koktajle.Service.UserServiceImpl;
+import org.springframework.web.bind.annotation.RequestParam;
+import springboot_ds.koktajle.Repository.UserRepository;
+import springboot_ds.koktajle.config.Response.ErrorMessage;
+import springboot_ds.koktajle.config.Response.SuccessMessage;
+import springboot_ds.koktajle.model.User;
+import springboot_ds.koktajle.service.JwtService;
+import springboot_ds.koktajle.service.UserServiceImpl;
 import springboot_ds.koktajle.dto.TokenResponseDto;
 import springboot_ds.koktajle.dto.UserRequestDto;
 import springboot_ds.koktajle.dto.UserResponseDto;
 import springboot_ds.koktajle.email.EmailService;
 
+import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Controller
+
 public class UserController {
 
     // pola wykorzystywane w klasie
@@ -32,22 +42,15 @@ public class UserController {
     private final UserServiceImpl userService;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final UserRepository userRepository;
+    private final JwtService jwtService;
 
-    public UserController(EmailService emailService){
+    public UserController(UserServiceImpl userService, PasswordEncoder passwordEncoder, EmailService emailService, UserRepository userRepository, JwtService jwtService) {
+        this.userService = userService;
+        this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
-        this.userService = new UserServiceImpl();
-        this.passwordEncoder = new PasswordEncoder()
-        {
-            @Override
-            public String encode(CharSequence rawPassword) {
-                return "";
-            }
-
-            @Override
-            public boolean matches(CharSequence rawPassword, String encodedPassword) {
-                return false;
-            }
-        };
+        this.userRepository = userRepository;
+        this.jwtService = jwtService;
     }
 
     @PostMapping("/api/test")
@@ -111,20 +114,45 @@ public class UserController {
         } else {
 
 
-            /* tu praca samodzielna:
-            jeśli zarejestrowany, sprawdzamy czy się zgadza hasło
-            jeśli nie -> response z HttpStatus.FORBIDDEN
-            jeśli niepotwierdzony -> response z HttpStatus.UNAUTHORIZED
 
-            jeśli dobre hasło i potwierdzony to generujemy token i zwracamy response z tokenem
-            który będzie wykorzystywany podczas autoryzacji get-ów
-            na tym etapie dodajemy klasę TokenResponseDto:
-            */
+            //jeśli zarejestrowany, sprawdzamy czy się zgadza hasło
+            String email = userRequestDto.getEmail();
+            Optional<User> DBuser =  userRepository.findByEmail(email);
+            if (DBuser.isEmpty()) {
+                return new ResponseEntity<>
+                        (new UserResponseDto("TAKI UZYTKOWNIK NIE ISTNIEJE!\nPODANY MAIL: ".concat(userRequestDto.getEmail())), HttpStatus.OK);
+            }
+            String hashedPassword = DBuser.get().getPassword();
+
+            //jeśli nie -> response z HttpStatus.FORBIDDEN
+            if (!passwordEncoder.matches(userRequestDto.getPassword(), hashedPassword)) {
+                return new ResponseEntity<>(
+                        new UserResponseDto("HASLO SIE NIE ZGADZA."),
+                        HttpStatus.OK);
+            }
+
+
+            //jeśli niepotwierdzony -> response z HttpStatus.UNAUTHORIZED
+
+            Boolean confirmed = DBuser.get().isConfirmed();
+            if (!confirmed) {
+                System.out.println("NIE POTWIERDZONE");
+
+                return new ResponseEntity<>(
+                        new UserResponseDto("KONTO JESZCZE NIE POTWIERDZONE."),
+                        HttpStatus.OK);
+            }
+
+            //jeśli dobre hasło i potwierdzony to generujemy token i zwracamy response z tokenem
+            //który będzie wykorzystywany podczas autoryzacji get-ów
+            //na tym etapie dodajemy klasę TokenResponseDto:
 
             String token = JwtService.generateToken(userRequestDto.getEmail(), LOGIN_TOKEN_EXPIRATION_TIME);
 
-            UserResponseDto responseDto = new UserResponseDto(token);
-            ResponseEntity<UserResponseDto> responseObject = new ResponseEntity<UserResponseDto>(responseDto,HttpStatus.OK);
+            System.out.println("ZALOGOWANO");
+
+            TokenResponseDto responseDto = new TokenResponseDto("Zalogowano poprawnie",token);
+            ResponseEntity<TokenResponseDto> responseObject = new ResponseEntity<TokenResponseDto>(responseDto,HttpStatus.OK);
             return responseObject;
 
         }
@@ -133,8 +161,34 @@ public class UserController {
 
     }
     @GetMapping("/api/confirm")
-    public ResponseEntity<?> confirmToken(){
-        ResponseEntity<String> responseObject = new ResponseEntity<String>("TEST",HttpStatus.OK);
-        return responseObject;
-     }
+    public ResponseEntity<?> confirmToken(@RequestParam String token) {
+        String email = JwtService.getEmailFromToken(token);
+        Date expirationDate = JwtService.getExpirationDateFromToken(token);
+
+        if (expirationDate == null) {
+            System.out.println("WYGASL");
+            return ResponseEntity.badRequest().body(new ErrorMessage("Token wygasł"));
+        }
+
+        Optional<User> DBuser = userRepository.findByEmail(email);
+
+        if (DBuser.isEmpty()) {
+            System.out.println("NIE ISTNIEJE TAKI UZYTKOWNIK");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorMessage("Użytkownik nie istnieje"));
+        }
+
+        User user = DBuser.get();
+        Boolean isValidToken = JwtService.validateToken(token, user);
+
+        if (!isValidToken) {
+            System.out.println("INVALID TOKEN");
+            return ResponseEntity.badRequest().body(new ErrorMessage("Token Nie jest Prawdziwy schizolu"));
+        }
+
+        user.setConfirmed(true);
+        userRepository.save(user);
+        System.out.println("JEST DOBRY TOKEN DO CONFIRM.");
+        return new ResponseEntity<String>("TEST", HttpStatus.OK);
+    }
+
 }

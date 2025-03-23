@@ -1,4 +1,4 @@
-package springboot_ds.koktajle.Service;
+package springboot_ds.koktajle.service;
 
 import springboot_ds.koktajle.dto.UserRequestDto;
 

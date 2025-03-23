@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import springboot_ds.koktajle.config.SecurityConfigs;
 
-import java.net.InetAddress;
+
 
 @SpringBootApplication
 public class KoktajleApplication {
