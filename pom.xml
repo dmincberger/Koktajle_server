@@ -10,7 +10,7 @@
     </parent>
     <groupId>SpringBoot_DS</groupId>
     <artifactId>Koktajle</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1-SNAPSHOT</version>MX
     <name>Koktajle</name>
     <description>Koktajle</description>
     <url/>
@@ -56,6 +56,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

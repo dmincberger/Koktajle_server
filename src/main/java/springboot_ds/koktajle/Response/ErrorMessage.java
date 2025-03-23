@@ -1,4 +1,4 @@
-package springboot_ds.koktajle.config.Response;
+package springboot_ds.koktajle.Response;
 
 public class ErrorMessage {
     private String message;

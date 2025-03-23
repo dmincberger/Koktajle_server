@@ -8,4 +8,12 @@ public class TokenResponseDto {
         this.message = message;
         this.token = token;
     }
+
+    public String getMessage() {
+        return message;
+    }
+    public String getToken(){
+        return token;
+    }
+
 }

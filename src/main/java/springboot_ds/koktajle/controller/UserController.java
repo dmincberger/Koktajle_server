@@ -1,12 +1,8 @@
 package springboot_ds.koktajle.controller;
 
-import io.jsonwebtoken.Jwt;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,8 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import springboot_ds.koktajle.Repository.UserRepository;
-import springboot_ds.koktajle.config.Response.ErrorMessage;
-import springboot_ds.koktajle.config.Response.SuccessMessage;
+import springboot_ds.koktajle.Response.ErrorMessage;
 import springboot_ds.koktajle.model.User;
 import springboot_ds.koktajle.service.JwtService;
 import springboot_ds.koktajle.service.UserServiceImpl;
@@ -27,7 +22,6 @@ import springboot_ds.koktajle.email.EmailService;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Controller
 
@@ -36,7 +30,7 @@ public class UserController {
     // pola wykorzystywane w klasie
 
     private final static String BASE_URL = "http://localhost:8080"; // to będzie w przyszłości inetaddress
-    private final static  long CONFIRMATION_TOKEN_EXPIRATION_TIME = 30000; // 30 sekund na token potwierdzający
+    private final static  long CONFIRMATION_TOKEN_EXPIRATION_TIME = 300000; // 30 sekund na token potwierdzający
     private final static  long LOGIN_TOKEN_EXPIRATION_TIME = 86400000; // 24 godziny na token po zalogowaniu
 
     private final UserServiceImpl userService;
@@ -108,6 +102,7 @@ public class UserController {
         Optional<UserRequestDto> registeredUser = userService.getUserByEmail(userRequestDto.getEmail());
 
         if (registeredUser.isEmpty()) {
+            System.out.println("NIE ISTNIEJE TAKI UZYTKOWNIK");
             return new ResponseEntity<>(
                     new UserResponseDto("TAKI UZYTKOWNIK NIE ISTNIEJE!\nPODANY MAIL: ".concat(userRequestDto.getEmail())),
                     HttpStatus.FORBIDDEN);
@@ -150,6 +145,8 @@ public class UserController {
             String token = JwtService.generateToken(userRequestDto.getEmail(), LOGIN_TOKEN_EXPIRATION_TIME);
 
             System.out.println("ZALOGOWANO");
+
+
 
             TokenResponseDto responseDto = new TokenResponseDto("Zalogowano poprawnie",token);
             ResponseEntity<TokenResponseDto> responseObject = new ResponseEntity<TokenResponseDto>(responseDto,HttpStatus.OK);
