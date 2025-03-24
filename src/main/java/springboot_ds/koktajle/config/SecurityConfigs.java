@@ -30,7 +30,8 @@ public class SecurityConfigs {
                         .requestMatchers(HttpMethod.POST, "/api/register/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/login/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/confirm").permitAll()
-                        .anyRequest().authenticated()
+
+                        .anyRequest().permitAll()
                 )
 
                 .sessionManagement(session -> session

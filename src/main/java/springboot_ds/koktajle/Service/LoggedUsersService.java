@@ -1,4 +1,4 @@
-package springboot_ds.koktajle.Service;
+package springboot_ds.koktajle.service;
 
 public interface LoggedUsersService {
 

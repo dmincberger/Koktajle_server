@@ -10,7 +10,7 @@
     </parent>
     <groupId>SpringBoot_DS</groupId>
     <artifactId>Koktajle</artifactId>
-    <version>0.0.1-SNAPSHOT</version>MX
+    <version>0.0.1-SNAPSHOT</version>
     <name>Koktajle</name>
     <description>Koktajle</description>
     <url/>
