@@ -1,5 +1,9 @@
 package springboot_ds.koktajle.service;
 
-public interface LoggedUsersService {
+import springboot_ds.koktajle.model.User;
 
+public interface LoggedUsersService {
+    String logUserIn(User user);
+    String logUserOut(User user);
+    Boolean checkIfUserLoggedIn(User user);
 }

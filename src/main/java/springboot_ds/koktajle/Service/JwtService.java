@@ -18,7 +18,7 @@ import springboot_ds.koktajle.model.User;
 public class JwtService {
     private static final Key SIGNING_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS512);
 
-    public static String generateToken(String email, long expiration_time) {
+    public String generateToken(String email, long expiration_time) {
 
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + expiration_time);
@@ -34,7 +34,7 @@ public class JwtService {
                 .compact();
     }
 
-    public static Boolean validateToken(String token, User user) {
+    public Boolean validateToken(String token, User user) {
         Date expirationDate = getExpirationDateFromToken(token);
         assert expirationDate != null;
         if (expirationDate.before(new Date())) {
@@ -45,7 +45,7 @@ public class JwtService {
         return user.getEmail().equals(email) && !expirationDate.before(new Date());
     }
 
-    public static String getEmailFromToken(String token) {
+    public String getEmailFromToken(String token) {
         try {
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(SIGNING_KEY)
@@ -60,7 +60,7 @@ public class JwtService {
         }
     }
 
-    public static Date getExpirationDateFromToken(String token) {
+    public Date getExpirationDateFromToken(String token) {
         try {
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(SIGNING_KEY)

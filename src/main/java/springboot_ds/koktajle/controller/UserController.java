@@ -11,8 +11,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import springboot_ds.koktajle.Repository.UserRepository;
 import springboot_ds.koktajle.Response.ErrorMessage;
+import springboot_ds.koktajle.dto.LogoutRequestDto;
 import springboot_ds.koktajle.model.User;
 import springboot_ds.koktajle.service.JwtService;
+import springboot_ds.koktajle.service.LoggedUsersServiceImpl;
 import springboot_ds.koktajle.service.UserServiceImpl;
 import springboot_ds.koktajle.dto.TokenResponseDto;
 import springboot_ds.koktajle.dto.UserRequestDto;
@@ -38,6 +40,7 @@ public class UserController {
     private final EmailService emailService;
     private final UserRepository userRepository;
     private final JwtService jwtService;
+    private final LoggedUsersServiceImpl loggedUsersService;
 
     public UserController(UserServiceImpl userService, PasswordEncoder passwordEncoder, EmailService emailService, UserRepository userRepository, JwtService jwtService) {
         this.userService = userService;
@@ -45,14 +48,7 @@ public class UserController {
         this.emailService = emailService;
         this.userRepository = userRepository;
         this.jwtService = jwtService;
-    }
-
-    @PostMapping("/api/test")
-    public ResponseEntity<String> testAnswer(@RequestBody @Valid Map<String,String> requestBody){
-        String wiadomosc = requestBody.get("wiadomosc");
-        System.out.println(wiadomosc);
-        System.out.println("OTRZYMALEM");
-        return new ResponseEntity<>("Wiadomosc otrzymana", HttpStatus.ACCEPTED);
+        this.loggedUsersService = new LoggedUsersServiceImpl();
     }
 
     @PostMapping("/api/register")
@@ -75,7 +71,7 @@ public class UserController {
 
 
 
-            String token = JwtService.generateToken(userRequestDto.getEmail(), CONFIRMATION_TOKEN_EXPIRATION_TIME);
+            String token = jwtService.generateToken(userRequestDto.getEmail(), CONFIRMATION_TOKEN_EXPIRATION_TIME);
             String confirmationLink = BASE_URL + "/api/confirm?token=" + token;
             String response = "Mail z potwierdzeniem konta wysłany na pocztę. Masz 24 godziny.";
             UserResponseDto responseDto = new UserResponseDto(response);
@@ -91,6 +87,37 @@ public class UserController {
             return responseObject;
         }
 
+    }
+
+    @GetMapping("/api/confirm")
+    public ResponseEntity<?> confirmToken(@RequestParam String token) {
+        String email = jwtService.getEmailFromToken(token);
+        Date expirationDate = jwtService.getExpirationDateFromToken(token);
+
+        if (expirationDate == null) {
+            System.out.println("WYGASL");
+            return ResponseEntity.badRequest().body(new ErrorMessage("Token wygasł"));
+        }
+
+        Optional<User> DBuser = userRepository.findByEmail(email);
+
+        if (DBuser.isEmpty()) {
+            System.out.println("NIE ISTNIEJE TAKI UZYTKOWNIK");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorMessage("Użytkownik nie istnieje"));
+        }
+
+        User user = DBuser.get();
+        Boolean isValidToken = jwtService.validateToken(token, user);
+
+        if (!isValidToken) {
+            System.out.println("INVALID TOKEN");
+            return ResponseEntity.badRequest().body(new ErrorMessage("Token Nie jest Prawdziwy schizolu"));
+        }
+
+        user.setConfirmed(true);
+        userRepository.save(user);
+        System.out.println("JEST DOBRY TOKEN DO CONFIRM.");
+        return new ResponseEntity<String>("TEST", HttpStatus.OK);
     }
 
     @PostMapping("/api/login")
@@ -142,11 +169,12 @@ public class UserController {
             //który będzie wykorzystywany podczas autoryzacji get-ów
             //na tym etapie dodajemy klasę TokenResponseDto:
 
-            String token = JwtService.generateToken(userRequestDto.getEmail(), LOGIN_TOKEN_EXPIRATION_TIME);
+            String token = jwtService.generateToken(userRequestDto.getEmail(), LOGIN_TOKEN_EXPIRATION_TIME);
 
             System.out.println("ZALOGOWANO");
-
-
+            // to ZAWSZE POWINNO ZADZIALAC, bo user zostal juz wczesniej technicznie ogarniety, teraz tylko w db go szukam.
+            User user = userRepository.findByEmail(userRequestDto.getEmail()).get();
+            loggedUsersService.logUserIn(user);
 
             TokenResponseDto responseDto = new TokenResponseDto("Zalogowano poprawnie",token);
             ResponseEntity<TokenResponseDto> responseObject = new ResponseEntity<TokenResponseDto>(responseDto,HttpStatus.OK);
@@ -157,35 +185,13 @@ public class UserController {
 
 
     }
-    @GetMapping("/api/confirm")
-    public ResponseEntity<?> confirmToken(@RequestParam String token) {
-        String email = JwtService.getEmailFromToken(token);
-        Date expirationDate = JwtService.getExpirationDateFromToken(token);
 
-        if (expirationDate == null) {
-            System.out.println("WYGASL");
-            return ResponseEntity.badRequest().body(new ErrorMessage("Token wygasł"));
-        }
-
-        Optional<User> DBuser = userRepository.findByEmail(email);
-
-        if (DBuser.isEmpty()) {
-            System.out.println("NIE ISTNIEJE TAKI UZYTKOWNIK");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorMessage("Użytkownik nie istnieje"));
-        }
-
-        User user = DBuser.get();
-        Boolean isValidToken = JwtService.validateToken(token, user);
-
-        if (!isValidToken) {
-            System.out.println("INVALID TOKEN");
-            return ResponseEntity.badRequest().body(new ErrorMessage("Token Nie jest Prawdziwy schizolu"));
-        }
-
-        user.setConfirmed(true);
-        userRepository.save(user);
-        System.out.println("JEST DOBRY TOKEN DO CONFIRM.");
-        return new ResponseEntity<String>("TEST", HttpStatus.OK);
+    @PostMapping("/api/logout")
+    public String logoutUser(final @Valid @RequestBody LogoutRequestDto logoutRequestDto){
+        // trzeba sprawdzic czy token podany jest:
+        // 1. Prawdziwy i od nas
+        // 2. Nie wygasł już
+        // 3. Pasuje do emaila który chcemy wylogować.
+        return "placeholder";
     }
-
 }
