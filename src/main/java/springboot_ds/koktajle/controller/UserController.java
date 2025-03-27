@@ -63,6 +63,9 @@ public class UserController {
         if (registeredUser.isEmpty()) {
 
             String password = userRequestDto.getPassword();
+            System.out.println("Password: "+password);
+            System.out.println("Email: "+userRequestDto.getEmail());
+            System.out.println("Received request body: " + userRequestDto);
             String encryptedPassword = passwordEncoder.encode(password);
             userRequestDto.setPassword(encryptedPassword);
             userService.createUser(userRequestDto);
@@ -131,7 +134,7 @@ public class UserController {
         if (registeredUser.isEmpty()) {
             System.out.println("NIE ISTNIEJE TAKI UZYTKOWNIK");
             return new ResponseEntity<>(
-                    new UserResponseDto("TAKI UZYTKOWNIK NIE ISTNIEJE!\nPODANY MAIL: ".concat(userRequestDto.getEmail())),
+                    new TokenResponseDto("TAKI UZYTKOWNIK NIE ISTNIEJE!\nPODANY MAIL: ".concat(userRequestDto.getEmail()),""),
                     HttpStatus.FORBIDDEN);
         } else {
 
@@ -142,14 +145,14 @@ public class UserController {
             Optional<User> DBuser =  userRepository.findByEmail(email);
             if (DBuser.isEmpty()) {
                 return new ResponseEntity<>
-                        (new UserResponseDto("TAKI UZYTKOWNIK NIE ISTNIEJE!\nPODANY MAIL: ".concat(userRequestDto.getEmail())), HttpStatus.OK);
+                        (new TokenResponseDto("TAKI UZYTKOWNIK NIE ISTNIEJE!\nPODANY MAIL: ".concat(userRequestDto.getEmail()),""), HttpStatus.OK);
             }
             String hashedPassword = DBuser.get().getPassword();
 
             //jeśli nie -> response z HttpStatus.FORBIDDEN
             if (!passwordEncoder.matches(userRequestDto.getPassword(), hashedPassword)) {
                 return new ResponseEntity<>(
-                        new UserResponseDto("HASLO SIE NIE ZGADZA."),
+                        new TokenResponseDto("HASLO SIE NIE ZGADZA.",""),
                         HttpStatus.OK);
             }
 
@@ -161,7 +164,7 @@ public class UserController {
                 System.out.println("NIE POTWIERDZONE");
 
                 return new ResponseEntity<>(
-                        new UserResponseDto("KONTO JESZCZE NIE POTWIERDZONE."),
+                        new TokenResponseDto("KONTO JESZCZE NIE POTWIERDZONE.",""),
                         HttpStatus.OK);
             }
 
@@ -186,8 +189,8 @@ public class UserController {
 
     }
 
-    @PostMapping("/api/logout")
-    public String logoutUser(final @Valid @RequestBody LogoutRequestDto logoutRequestDto){
+    @GetMapping("/api/logout")
+    public String logoutUser(@RequestParam String token){
         // trzeba sprawdzic czy token podany jest:
         // 1. Prawdziwy i od nas
         // 2. Nie wygasł już

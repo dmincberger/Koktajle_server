@@ -38,4 +38,15 @@ public class UserRequestDto {
     public String getUsername() {
         return username;
     }
+
+    @Override
+    public String toString() {
+        return "UserRequestDto{" +
+                "email='" + email + '\'' +
+                ", password='" + password + '\'' +
+                ", username='" + username + '\'' +
+                ", confirmed=" + confirmed +
+                '}';
+    }
+
 }

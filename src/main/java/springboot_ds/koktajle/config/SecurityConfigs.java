@@ -22,6 +22,11 @@ public class SecurityConfigs {
 
     @Bean
     public SecurityFilterChain configure(HttpSecurity http, EmailOneTimeTokenHandler emailOneTimeTokenHandler) throws Exception {
+
+
+        InetAddress localHost = InetAddress.getLocalHost();
+        System.out.println(localHost.getHostAddress());
+
         http
                 //csrf
                 .csrf(csrf -> csrf.disable())

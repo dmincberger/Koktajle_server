@@ -6,21 +6,25 @@ import springboot_ds.koktajle.model.User;
 import java.util.ArrayList;
 
 @Service
-public class LoggedUsersServiceImpl  implements LoggedUsersService {
-    private final ArrayList<User> loggedUsers;
+public class LoggedUsersServiceImpl {
+    private static final ArrayList<User> loggedUsers = new ArrayList<User>();
 
 
-
-    public LoggedUsersServiceImpl() {
-        loggedUsers = new ArrayList<User>();
-    }
-
-    public Boolean checkIfUserLoggedIn(User user) {
+    static public  Boolean checkIfUserLoggedIn(User user) {
         Boolean loggedIn = loggedUsers.contains(user);
         return loggedIn;
     }
 
-    public String logUserIn(User user) {
+    static public User returnLoggedUser(String email) {
+        for (User loggedUser : loggedUsers) {
+            if (loggedUser.getEmail().equals(email)) {
+                return loggedUser; // Return immediately if found
+            }
+        }
+        return null; // Return null if no match is found
+    }
+
+    public static String logUserIn(User user) {
         if (checkIfUserLoggedIn(user)) {
             return "Uzytkownik juz zalogowany.";
         }
@@ -28,7 +32,7 @@ public class LoggedUsersServiceImpl  implements LoggedUsersService {
         return "Pomyślnie zalogowano użytkownika";
     }
 
-    public String logUserOut(User user) {
+    static public String logUserOut(User user) {
         if (checkIfUserLoggedIn(user)) {
             loggedUsers.remove(user);
             return "Pomyślnie wylogowano użytkownika.";
