@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,16 +21,25 @@ import java.io.IOException;
 import java.util.Optional;
 
 @Component
-@RequiredArgsConstructor
+
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
+
 
     private final UserDetailsService userDetailsService;
     private final JwtService jwtService;
+
+    @Autowired
+    public JwtAuthorizationFilter(UserDetailsService userDetailsService, JwtService jwtService) {
+        this.userDetailsService = userDetailsService;
+        this.jwtService = jwtService;
+    }
+
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
         // szukamy nagłowka Authorization
-
+        System.out.println("Czy ty to nawet sprawdzasz");
         String authHeader = request.getHeader("Authorization");
 
         // jeśli jest i zaczyna się od Bearer
@@ -40,7 +50,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
             String token = authHeader.substring(7);
             String email = jwtService.getEmailFromToken(token);
-
+            System.out.println(token);
             // jeśli tak
             UserDetails userDetails = userDetailsService.loadUserByUsername(email);
             User LoggedUser = LoggedUsersServiceImpl.returnLoggedUser(email);

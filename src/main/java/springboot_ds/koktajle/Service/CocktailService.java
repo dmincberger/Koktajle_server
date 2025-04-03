@@ -7,6 +7,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import springboot_ds.koktajle.Response.Drink;
 
+import java.time.Duration;
+
 @Service
 public class CocktailService {
     private final String BASE_URL = "https://thecocktaildb.com/api/json/v1/1";
@@ -27,6 +29,7 @@ public Mono<Drink> fetchDrinks(String name){
                         .build())
                 .retrieve()
                 .bodyToMono(Drink.class)
+                .timeout(Duration.ofSeconds(5))
                 .doOnNext(response -> System.out.println("Fetched Response: " + response));
 }
 }

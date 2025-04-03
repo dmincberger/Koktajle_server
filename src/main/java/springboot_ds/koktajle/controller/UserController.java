@@ -23,6 +23,7 @@ import springboot_ds.koktajle.email.EmailService;
 
 import java.util.Date;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Controller
@@ -41,14 +42,16 @@ public class UserController {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final LoggedUsersServiceImpl loggedUsersService;
+    private final LoggedUsersServiceImpl loggedUsersServiceImpl;
 
-    public UserController(UserServiceImpl userService, PasswordEncoder passwordEncoder, EmailService emailService, UserRepository userRepository, JwtService jwtService) {
+    public UserController(UserServiceImpl userService, PasswordEncoder passwordEncoder, EmailService emailService, UserRepository userRepository, JwtService jwtService, LoggedUsersServiceImpl loggedUsersServiceImpl) {
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
         this.userRepository = userRepository;
         this.jwtService = jwtService;
         this.loggedUsersService = new LoggedUsersServiceImpl();
+        this.loggedUsersServiceImpl = loggedUsersServiceImpl;
     }
 
     @PostMapping("/api/register")
@@ -76,7 +79,7 @@ public class UserController {
 
             String token = jwtService.generateToken(userRequestDto.getEmail(), CONFIRMATION_TOKEN_EXPIRATION_TIME);
             String confirmationLink = BASE_URL + "/api/confirm?token=" + token;
-            String response = "Mail z potwierdzeniem konta wysłany na pocztę. Masz 24 godziny.";
+            String response = confirmationLink;
             UserResponseDto responseDto = new UserResponseDto(response);
             ResponseEntity<UserResponseDto> responseObject = new ResponseEntity<UserResponseDto>(responseDto,HttpStatus.OK);
             System.out.println(responseObject);
@@ -171,7 +174,9 @@ public class UserController {
             //jeśli dobre hasło i potwierdzony to generujemy token i zwracamy response z tokenem
             //który będzie wykorzystywany podczas autoryzacji get-ów
             //na tym etapie dodajemy klasę TokenResponseDto:
-
+            if (DBuser.isPresent()){
+                
+            }
             String token = jwtService.generateToken(userRequestDto.getEmail(), LOGIN_TOKEN_EXPIRATION_TIME);
 
             System.out.println("ZALOGOWANO");
@@ -190,11 +195,29 @@ public class UserController {
     }
 
     @GetMapping("/api/logout")
-    public String logoutUser(@RequestParam String token){
+    public ResponseEntity<?> logoutUser(@RequestParam String token){
         // trzeba sprawdzic czy token podany jest:
-        // 1. Prawdziwy i od nas
-        // 2. Nie wygasł już
+        // 1. Prawdziwy i od nas - robi authorization w sumie
+        // 2. Nie wygasł już - tak samo robi authorization
         // 3. Pasuje do emaila który chcemy wylogować.
-        return "placeholder";
+        String email = jwtService.getEmailFromToken(token);
+        try {
+            User user = userRepository.findByEmail(email).get();
+
+            if (!LoggedUsersServiceImpl.checkIfUserLoggedIn(user)) {
+                ResponseEntity<UserResponseDto> responseObject = new ResponseEntity<UserResponseDto>(new UserResponseDto("Nie jestes zalogowany."), HttpStatus.OK);
+                return responseObject;
+            }
+
+            LoggedUsersServiceImpl.expireToken(token);
+
+            LoggedUsersServiceImpl.logUserOut(user);
+            ResponseEntity<UserResponseDto> responseObject = new ResponseEntity<UserResponseDto>(new UserResponseDto("Wylogowano"), HttpStatus.OK);
+            return responseObject;
+        } catch (NoSuchElementException e){
+            e.printStackTrace();
+            ResponseEntity<UserResponseDto> responseObject = new ResponseEntity<UserResponseDto>(new UserResponseDto("ERROR: nie ma takiego uzytkownika"), HttpStatus.OK);
+            return responseObject;
+        }
     }
 }

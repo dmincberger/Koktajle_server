@@ -28,7 +28,8 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private boolean confirmed;
 
-    @Column
+
+    @Column(nullable = false, unique = true)
     private String username;
 
     @Override

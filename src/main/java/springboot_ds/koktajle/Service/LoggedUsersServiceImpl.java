@@ -8,7 +8,7 @@ import java.util.ArrayList;
 @Service
 public class LoggedUsersServiceImpl {
     private static final ArrayList<User> loggedUsers = new ArrayList<User>();
-
+    private static final ArrayList<String> expiredTokens = new ArrayList<String>();
 
     static public  Boolean checkIfUserLoggedIn(User user) {
         Boolean loggedIn = loggedUsers.contains(user);
@@ -41,5 +41,8 @@ public class LoggedUsersServiceImpl {
         }
     }
 
+    static public void expireToken(String token){
+        expiredTokens.add(token);
+    }
 
 }
