@@ -10,6 +10,8 @@ import org.springframework.security.web.util.UrlUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 import springboot_ds.koktajle.email.EmailService;
+import springboot_ds.koktajle.model.User;
+import springboot_ds.koktajle.service.CustomUserDetailsService;
 
 import java.io.IOException;
 
@@ -17,12 +19,21 @@ import java.io.IOException;
 public class EmailOneTimeTokenHandler implements OneTimeTokenGenerationSuccessHandler {
 
     private final EmailService emailService;
+    private final CustomUserDetailsService userDetailsService;
     private final OneTimeTokenGenerationSuccessHandler redirectHandler
             = new RedirectOneTimeTokenGenerationSuccessHandler("/ott/sent");
 
-    public EmailOneTimeTokenHandler(EmailService emailService) {
+    public EmailOneTimeTokenHandler(EmailService emailService, CustomUserDetailsService userDetailsService) {
         this.emailService = emailService;
+        this.userDetailsService = userDetailsService;
     }
+
+    private String getUserEmail(String username) {
+
+        User user = userDetailsService.loadDatabaseUserByUsername(username);
+        return user.getEmail();
+    }
+
 
 
     @Override
@@ -38,7 +49,7 @@ public class EmailOneTimeTokenHandler implements OneTimeTokenGenerationSuccessHa
 
         String link = builder.toUriString();
         System.out.println("link: "+ link);
-        String email = "dominiko777@interia.pl";
+        String email = getUserEmail(oneTimeToken.getUsername());
 
         this.emailService.sendEmail(email, "One Time Token", "link do zalogowania: " + link);
         this.redirectHandler.handle(request, response, oneTimeToken);

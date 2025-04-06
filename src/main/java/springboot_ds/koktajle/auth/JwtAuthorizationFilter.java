@@ -18,6 +18,7 @@ import springboot_ds.koktajle.service.JwtService;
 import springboot_ds.koktajle.service.LoggedUsersServiceImpl;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.Optional;
 
 @Component
@@ -52,26 +53,36 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
             String email = jwtService.getEmailFromToken(token);
             System.out.println(token);
             // jeśli tak
-            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-            User LoggedUser = LoggedUsersServiceImpl.returnLoggedUser(email);
-            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null && LoggedUser != null) {
-
-                // to SpringSecurity sprawdza czy nasz user istnieje
-
-
-                // i czy token jest ważny
-
-                if (jwtService.validateToken(token, LoggedUser)) {
-
-                    // jeśli wszystko sie zgadza, Security pozwala na żądanie czyli dopuszcza do kontrolera
-
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities());
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-
-                }
+            Date is_expired = jwtService.getExpirationDateFromToken(token);
+            System.out.println("EXPIRED? "+is_expired);
+            if (is_expired == null || is_expired.before(new Date())) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401 Unauthorized
+                response.getWriter().write("Unauthorized: Invalid or expired token");
+                return;
             }
+                UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+                System.out.println("DETAILS: "+userDetails);
+                User LoggedUser = LoggedUsersServiceImpl.returnLoggedUser(email);
+                System.out.println("LoggedUser: "+LoggedUser);
+                if (email != null && SecurityContextHolder.getContext().getAuthentication() == null && LoggedUser != null) {
+
+                    // to SpringSecurity sprawdza czy nasz user istnieje
+
+
+                    // i czy token jest ważny
+
+                    if (jwtService.validateToken(token, LoggedUser)) {
+
+                        // jeśli wszystko sie zgadza, Security pozwala na żądanie czyli dopuszcza do kontrolera
+
+                        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                                userDetails, null, userDetails.getAuthorities());
+                        authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+
+                    }
+                }
+
 
         }
         filterChain.doFilter(request, response);

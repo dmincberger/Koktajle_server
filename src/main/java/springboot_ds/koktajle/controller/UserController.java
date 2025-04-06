@@ -11,14 +11,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import springboot_ds.koktajle.Repository.UserRepository;
 import springboot_ds.koktajle.Response.ErrorMessage;
-import springboot_ds.koktajle.dto.LogoutRequestDto;
+import springboot_ds.koktajle.dto.*;
 import springboot_ds.koktajle.model.User;
 import springboot_ds.koktajle.service.JwtService;
 import springboot_ds.koktajle.service.LoggedUsersServiceImpl;
 import springboot_ds.koktajle.service.UserServiceImpl;
-import springboot_ds.koktajle.dto.TokenResponseDto;
-import springboot_ds.koktajle.dto.UserRequestDto;
-import springboot_ds.koktajle.dto.UserResponseDto;
 import springboot_ds.koktajle.email.EmailService;
 
 import java.util.Date;
@@ -34,7 +31,7 @@ public class UserController {
 
     private final static String BASE_URL = "http://localhost:8080"; // to będzie w przyszłości inetaddress
     private final static  long CONFIRMATION_TOKEN_EXPIRATION_TIME = 300000; // 30 sekund na token potwierdzający
-    private final static  long LOGIN_TOKEN_EXPIRATION_TIME = 86400000; // 24 godziny na token po zalogowaniu
+    private final static  long LOGIN_TOKEN_EXPIRATION_TIME = 30000; // 24 godziny na token po zalogowaniu
 
     private final UserServiceImpl userService;
     private final PasswordEncoder passwordEncoder;
@@ -218,6 +215,30 @@ public class UserController {
             e.printStackTrace();
             ResponseEntity<UserResponseDto> responseObject = new ResponseEntity<UserResponseDto>(new UserResponseDto("ERROR: nie ma takiego uzytkownika"), HttpStatus.OK);
             return responseObject;
+        }
+    }
+
+    @GetMapping("/api/token_check")
+    public ResponseEntity<ExpirationCheckRequestDto> tokenCheck(@RequestParam String token){
+        if (jwtService.getExpirationDateFromToken(token) == null) {
+            ExpirationCheckRequestDto responseObject = new ExpirationCheckRequestDto(true);
+            return new ResponseEntity<ExpirationCheckRequestDto>(responseObject,HttpStatus.OK);
+        }
+        ExpirationCheckRequestDto responseObject = new ExpirationCheckRequestDto(false);
+        return new ResponseEntity<ExpirationCheckRequestDto>(responseObject,HttpStatus.OK);
+    }
+    @GetMapping("/api/user_info")
+    public ResponseEntity<InfoRequestDto> userInfo(@RequestParam String token){
+        String email = jwtService.getEmailFromToken(token);
+        System.out.println("EMAIL: "+email);
+        Optional<User> user = userRepository.findByEmail(email);
+        if (user.isEmpty()) {
+            System.out.println("EMPTY");
+            return new ResponseEntity<InfoRequestDto>(new InfoRequestDto("",""), HttpStatus.OK);
+        } else {
+            User DBuser = user.get();
+            System.out.println("NOT EMPTY");
+            return new ResponseEntity<InfoRequestDto>(new InfoRequestDto(DBuser.getEmail(),DBuser.getUsername()),HttpStatus.OK);
         }
     }
 }
