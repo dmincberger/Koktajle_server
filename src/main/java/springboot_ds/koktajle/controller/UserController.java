@@ -31,7 +31,7 @@ public class UserController {
 
     private final static String BASE_URL = "http://localhost:8080"; // to będzie w przyszłości inetaddress
     private final static  long CONFIRMATION_TOKEN_EXPIRATION_TIME = 300000; // 30 sekund na token potwierdzający
-    private final static  long LOGIN_TOKEN_EXPIRATION_TIME = 30000; // 24 godziny na token po zalogowaniu
+    private final static  long LOGIN_TOKEN_EXPIRATION_TIME = 3000000; // 24 godziny na token po zalogowaniu
 
     private final UserServiceImpl userService;
     private final PasswordEncoder passwordEncoder;
@@ -59,7 +59,9 @@ public class UserController {
         Optional<UserRequestDto> registeredUser = userService.getUserByEmail(userRequestDto.getEmail());
 
         // jeśli takiego nie ma to go tworzymy, jeśli jest, to odpowiedni response
+        if (userRequestDto.getEmail() == null || userRequestDto.getPassword() == null || userRequestDto.getUsername() == null){
 
+        }
         if (registeredUser.isEmpty()) {
 
             String password = userRequestDto.getPassword();
@@ -238,7 +240,7 @@ public class UserController {
         } else {
             User DBuser = user.get();
             System.out.println("NOT EMPTY");
-            return new ResponseEntity<InfoRequestDto>(new InfoRequestDto(DBuser.getEmail(),DBuser.getUsername()),HttpStatus.OK);
+            return new ResponseEntity<InfoRequestDto>(new InfoRequestDto(DBuser.getUsername(),DBuser.getEmail()),HttpStatus.OK);
         }
     }
 }

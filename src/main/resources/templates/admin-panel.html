@@ -2,15 +2,151 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Użytkownicy</title>
+
+    <!-- ✅ Bootstrap 5 CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 40px;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
+        }
+        .card {
+            margin-bottom: 1rem;
+        }
+        .form-label {
+            margin-top: 10px;
+        }
+    </style>
 </head>
 <body>
-<h1>TESCIK</h1>
-<th:block th:each="u : ${users}">
-    <p th:text="${u.username}">Name</p>
-</th:block>
+
+<div class="container">
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-8">
+            <h1 class="text-center">LISTA ZALOGOWANYCH UŻYTKOWNIKÓW</h1>
+            <div class="card p-3">
+                <div class="section-title">Zalogowani</div>
+                <th:block th:each="u : ${loggedusers}">
+                    <p><strong>Nazwa:</strong> <span th:text="${u.username}">Name</span></p>
+                    <p><strong>Email:</strong> <span th:text="${u.email}">Email</span></p>
+                    <p><strong>Zatwierdzony:</strong> <span th:text="${u.confirmed}">Zatwierdzony</span></p>
+                    <hr>
+                </th:block>
+            </div>
+
+            <div class="card p-3">
+                <div class="section-title">Wszyscy użytkownicy</div>
+                <th:block th:each="u : ${allusers}">
+                    <p><strong>Nazwa:</strong> <span th:text="${u.username}">Name</span></p>
+                    <p><strong>Email:</strong> <span th:text="${u.email}">Email</span></p>
+                    <p><strong>Zatwierdzony:</strong> <span th:text="${u.confirmed}">Zatwierdzony</span></p>
+                    <hr>
+                </th:block>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card p-4 shadow-sm">
+                <h2 class="text-center mb-4">Dodaj użytkownika</h2>
+                <form id="dodaj-uzytkownika" method="post" action="/admin/add">
+                    <div class="mb-3">
+                        <label for="nazwa" class="form-label">Nazwa</label>
+                        <input type="text" class="form-control" id="nazwa" name="nazwa">
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="text" class="form-control" id="email" name="email">
+                    </div>
+                    <div class="mb-3">
+                        <label for="haslo" class="form-label">Hasło</label>
+                        <input type="text" class="form-control" id="haslo" name="haslo">
+                    </div>
+                    <div class="form-check mb-3">
+                        <input type="checkbox" class="form-check-input" id="confirmed" name="confirmed">
+                        <label for="confirmed" class="form-check-label">Zatwierdzony</label>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">Stwórz użytkownika</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ Bootstrap JS (for completeness if needed) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- ✅ Custom JavaScript for form submission -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("dodaj-uzytkownika");
+
+        form.addEventListener("submit", function (e) {
+            e.preventDefault(); // Prevent default form submission
+
+            const username = document.getElementById("nazwa").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("haslo").value.trim();
+            const confirmed = document.getElementById("confirmed").checked;
+
+            let errors = [];
+
+            if (username === "") {
+                errors.push("Nazwa jest wymagana.");
+            }
+
+            if (email === "" || !email.includes("@")) {
+                errors.push("Podaj poprawny email.");
+            }
+
+            if (password.length < 6) {
+                errors.push("Hasło musi mieć co najmniej 6 znaków.");
+            }
+
+            if (errors.length > 0) {
+                alert(errors.join("\n"));
+                return;
+            }
+
+            fetch("/admin/add", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    username: username,
+                    email: email,
+                    password: password,
+                    confirmed: confirmed
+                })
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error("Błąd podczas zapisywania użytkownika.");
+                    return response.text();
+                })
+                .then(data => {
+                    alert(data);
+                })
+                .catch(error => {
+                    alert("Wystąpił błąd: " + error.message);
+                });
+        });
+    });
+</script>
 </body>
 </html>
-<script>
-
-</script>
