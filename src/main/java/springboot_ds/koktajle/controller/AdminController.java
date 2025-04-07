@@ -4,16 +4,19 @@ package springboot_ds.koktajle.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import springboot_ds.koktajle.config.EmailOneTimeTokenHandler;
+import springboot_ds.koktajle.dto.UserInformationDto;
+import springboot_ds.koktajle.service.LoggedUsersServiceImpl;
 
 import java.net.URI;
+import java.util.ArrayList;
 
 @Controller
 public class AdminController {
 
     private final EmailOneTimeTokenHandler emailOneTimeTokenHandler;
-
     public AdminController(EmailOneTimeTokenHandler emailOneTimeTokenHandler) {
         this.emailOneTimeTokenHandler = emailOneTimeTokenHandler;
     }
@@ -36,8 +39,10 @@ public ResponseEntity<String> ottLogin(){
         return "admin-login";
 }
 @GetMapping("/admin/dashboard")
-        public String adminPanel() {
+        public String adminPanel(Model model) {
         System.out.println("admin-dashboard");
+    ArrayList<UserInformationDto> loggedUsers = LoggedUsersServiceImpl.returnLoggedUsersInfo();
+        model.addAttribute("users",loggedUsers);
         return "admin-panel";
     }
 }

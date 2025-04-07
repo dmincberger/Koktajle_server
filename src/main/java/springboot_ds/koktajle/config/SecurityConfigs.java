@@ -1,5 +1,6 @@
 package springboot_ds.koktajle.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -24,14 +25,16 @@ public class SecurityConfigs {
 
     private final JwtAuthorizationFilter jwtAuthorizationFilter;
     private final UserDetailsService userDetailsService;
-
-    public SecurityConfigs(JwtAuthorizationFilter jwtAuthorizationFilter, UserDetailsService userDetailsService) {
+    @Autowired
+    private final OttEmailValidationFilter ottEmailValidationFilter;
+    public SecurityConfigs(JwtAuthorizationFilter jwtAuthorizationFilter, UserDetailsService userDetailsService, OttEmailValidationFilter ottEmailValidationFilter) {
         this.jwtAuthorizationFilter = jwtAuthorizationFilter;
         this.userDetailsService = userDetailsService;
+        this.ottEmailValidationFilter = ottEmailValidationFilter;
     }
 
     @Bean
-    public SecurityFilterChain configure(HttpSecurity http, EmailOneTimeTokenHandler emailOneTimeTokenHandler) throws Exception {
+    public SecurityFilterChain configure(HttpSecurity http, EmailOneTimeTokenHandler emailOneTimeTokenHandler, OttEmailValidationFilter ottEmailValidationFilter) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authorize -> authorize
@@ -40,9 +43,10 @@ public class SecurityConfigs {
                         .requestMatchers(HttpMethod.GET, "/api/confirm/**").permitAll()
                         .requestMatchers(HttpMethod.GET,"/admin/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/login/ott").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/customlogout").permitAll()
                         .anyRequest().authenticated()
                 ).formLogin(Customizer.withDefaults())
-
+                .addFilterBefore(ottEmailValidationFilter, UsernamePasswordAuthenticationFilter.class)
                 .oneTimeTokenLogin(configurer -> configurer.tokenGenerationSuccessHandler(emailOneTimeTokenHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .addFilterBefore(jwtAuthorizationFilter, UsernamePasswordAuthenticationFilter.class); // ⬅️ Add JWT Filter Here

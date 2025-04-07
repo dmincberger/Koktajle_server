@@ -191,7 +191,7 @@ public class UserController {
 
     }
 
-    @GetMapping("/api/logout")
+    @GetMapping("/api/customlogout")
     public ResponseEntity<?> logoutUser(@RequestParam String token){
         // trzeba sprawdzic czy token podany jest:
         // 1. Prawdziwy i od nas - robi authorization w sumie

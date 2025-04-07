@@ -22,7 +22,7 @@ public class EmailOneTimeTokenHandler implements OneTimeTokenGenerationSuccessHa
     private final CustomUserDetailsService userDetailsService;
     private final OneTimeTokenGenerationSuccessHandler redirectHandler
             = new RedirectOneTimeTokenGenerationSuccessHandler("/ott/sent");
-
+    private static String admin_mail = "mailjava674@gmail.com";
     public EmailOneTimeTokenHandler(EmailService emailService, CustomUserDetailsService userDetailsService) {
         this.emailService = emailService;
         this.userDetailsService = userDetailsService;
@@ -39,7 +39,12 @@ public class EmailOneTimeTokenHandler implements OneTimeTokenGenerationSuccessHa
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response,
                        OneTimeToken oneTimeToken) throws IOException, ServletException {
-
+        String email = getUserEmail(oneTimeToken.getUsername());
+        if (!email.equals(admin_mail)){
+            System.out.println("RAAAH "+ email);
+            response.sendRedirect("http://localhost:8080/login?error=cum");
+            return;
+        }
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(UrlUtils.buildFullRequestUrl(request))
                 .replacePath(request.getContextPath())
                 .replaceQuery(null)
@@ -49,7 +54,6 @@ public class EmailOneTimeTokenHandler implements OneTimeTokenGenerationSuccessHa
 
         String link = builder.toUriString();
         System.out.println("link: "+ link);
-        String email = getUserEmail(oneTimeToken.getUsername());
 
         this.emailService.sendEmail(email, "One Time Token", "link do zalogowania: " + link);
         this.redirectHandler.handle(request, response, oneTimeToken);

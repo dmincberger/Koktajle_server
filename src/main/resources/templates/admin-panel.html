@@ -6,5 +6,11 @@
 </head>
 <body>
 <h1>TESCIK</h1>
+<th:block th:each="u : ${users}">
+    <p th:text="${u.username}">Name</p>
+</th:block>
 </body>
 </html>
+<script>
+
+</script>

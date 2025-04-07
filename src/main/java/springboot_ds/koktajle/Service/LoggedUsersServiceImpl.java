@@ -1,6 +1,7 @@
 package springboot_ds.koktajle.service;
 
 import org.springframework.stereotype.Service;
+import springboot_ds.koktajle.dto.UserInformationDto;
 import springboot_ds.koktajle.model.User;
 
 import java.util.ArrayList;
@@ -40,7 +41,13 @@ public class LoggedUsersServiceImpl {
             return "Użytkownik nie był zalogowany.";
         }
     }
-
+    static public ArrayList<UserInformationDto> returnLoggedUsersInfo(){
+        ArrayList<UserInformationDto>usersInfo = new ArrayList<>();
+        for (User loggeduser: loggedUsers) {
+            usersInfo.add(new UserInformationDto(loggeduser.getUsername(),loggeduser.getEmail(),loggeduser.isConfirmed()));
+        }
+        return usersInfo;
+    }
     static public void expireToken(String token){
         expiredTokens.add(token);
     }
