@@ -69,4 +69,10 @@ public class User implements UserDetails {
     public String getUsername() {
         return this.username;
     }
+
+    @Override
+    public String toString(){
+        return "Email: "+this.getEmail()+" Username: "+this.getUsername() + " Password: "+this.getPassword()+ " Confirmed: "+this.isConfirmed();
+    }
+
 }

@@ -39,7 +39,6 @@ public class UserController {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final LoggedUsersServiceImpl loggedUsersService;
-    private final LoggedUsersServiceImpl loggedUsersServiceImpl;
 
     public UserController(UserServiceImpl userService, PasswordEncoder passwordEncoder, EmailService emailService, UserRepository userRepository, JwtService jwtService, LoggedUsersServiceImpl loggedUsersServiceImpl) {
         this.userService = userService;
@@ -47,8 +46,7 @@ public class UserController {
         this.emailService = emailService;
         this.userRepository = userRepository;
         this.jwtService = jwtService;
-        this.loggedUsersService = new LoggedUsersServiceImpl();
-        this.loggedUsersServiceImpl = loggedUsersServiceImpl;
+        this.loggedUsersService = loggedUsersServiceImpl;
     }
 
     @PostMapping("/api/register")
@@ -181,7 +179,8 @@ public class UserController {
             System.out.println("ZALOGOWANO");
             // to ZAWSZE POWINNO ZADZIALAC, bo user zostal juz wczesniej technicznie ogarniety, teraz tylko w db go szukam.
             User user = userRepository.findByEmail(userRequestDto.getEmail()).get();
-            loggedUsersService.logUserIn(user);
+            System.out.println("W LOGOWANIU: "+user.toString());
+            loggedUsersService.logUserIn(email,user);
 
             TokenResponseDto responseDto = new TokenResponseDto("Zalogowano poprawnie",token);
             ResponseEntity<TokenResponseDto> responseObject = new ResponseEntity<TokenResponseDto>(responseDto,HttpStatus.OK);
@@ -200,17 +199,23 @@ public class UserController {
         // 2. Nie wygasł już - tak samo robi authorization
         // 3. Pasuje do emaila który chcemy wylogować.
         String email = jwtService.getEmailFromToken(token);
+
         try {
             User user = userRepository.findByEmail(email).get();
-
-            if (!LoggedUsersServiceImpl.checkIfUserLoggedIn(user)) {
+            System.out.println(user.toString());
+            Boolean loginCheck = LoggedUsersServiceImpl.checkIfUserLoggedIn(email);
+            System.out.println(LoggedUsersServiceImpl.returnLoggedUsersInfo());
+            System.out.println("LOGIN CHECK: "+loginCheck);
+            if (!loginCheck) {
                 ResponseEntity<UserResponseDto> responseObject = new ResponseEntity<UserResponseDto>(new UserResponseDto("Nie jestes zalogowany."), HttpStatus.OK);
                 return responseObject;
             }
-
+            if (LoggedUsersServiceImpl.isTokenExpired(token)){
+                return new ResponseEntity<UserResponseDto>(new UserResponseDto("Token ktory chcesz uzyc do wylogowania, jest zuzyty"),HttpStatus.OK);
+            }
             LoggedUsersServiceImpl.expireToken(token);
 
-            LoggedUsersServiceImpl.logUserOut(user);
+            LoggedUsersServiceImpl.logUserOut(email,user);
             ResponseEntity<UserResponseDto> responseObject = new ResponseEntity<UserResponseDto>(new UserResponseDto("Wylogowano"), HttpStatus.OK);
             return responseObject;
         } catch (NoSuchElementException e){

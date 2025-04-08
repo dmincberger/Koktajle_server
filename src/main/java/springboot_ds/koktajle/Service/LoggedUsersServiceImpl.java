@@ -1,6 +1,9 @@
 package springboot_ds.koktajle.service;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import springboot_ds.koktajle.Repository.UserRepository;
 import springboot_ds.koktajle.dto.UserInformationDto;
 import springboot_ds.koktajle.model.User;
 
@@ -11,9 +14,16 @@ public class LoggedUsersServiceImpl {
     private static final ArrayList<User> loggedUsers = new ArrayList<User>();
     private static final ArrayList<String> expiredTokens = new ArrayList<String>();
 
-    static public  Boolean checkIfUserLoggedIn(User user) {
-        Boolean loggedIn = loggedUsers.contains(user);
-        return loggedIn;
+
+
+    static public Boolean checkIfUserLoggedIn(String email) {
+        for (User user : loggedUsers) {
+            if (user.getEmail().equals(email)) {
+                System.out.println("Logged in user: " + user.toString());
+                return true;
+            }
+        }
+        return false;
     }
 
     static public User returnLoggedUser(String email) {
@@ -25,21 +35,29 @@ public class LoggedUsersServiceImpl {
         return null; // Return null if no match is found
     }
 
-    public static String logUserIn(User user) {
-        if (checkIfUserLoggedIn(user)) {
+    public static String logUserIn(String email, User user) {
+        if (checkIfUserLoggedIn(email)) {
             return "Uzytkownik juz zalogowany.";
         }
         loggedUsers.add(user);
         return "Pomyślnie zalogowano użytkownika";
     }
 
-    static public String logUserOut(User user) {
-        if (checkIfUserLoggedIn(user)) {
-            loggedUsers.remove(user);
-            return "Pomyślnie wylogowano użytkownika.";
+    static public Boolean logUserOut(String email, User user) {
+        if (checkIfUserLoggedIn(email)) {
+            for (User loggedUser : loggedUsers) {
+                if (loggedUser.getEmail().equals(email)) {
+                    loggedUsers.remove(loggedUser);
+                    System.out.println("Logged out user: " + user.toString());
+                    return true;
+                }
+            }
         } else {
-            return "Użytkownik nie był zalogowany.";
+            System.out.println("Uzytkownik nigdy nie byl zalogowany.");
+            return false;
         }
+        System.out.println("Jakims cudem, uzytkownik jest zalogowany, i nie jest rownoczesnie");
+        return false;
     }
     static public ArrayList<UserInformationDto> returnLoggedUsersInfo(){
         ArrayList<UserInformationDto>usersInfo = new ArrayList<>();
@@ -51,5 +69,10 @@ public class LoggedUsersServiceImpl {
     static public void expireToken(String token){
         expiredTokens.add(token);
     }
-
+    static public Boolean isTokenExpired(String token){
+        if (expiredTokens.contains(token)){
+            return true;
+        }
+        return false;
+    }
 }
