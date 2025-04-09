@@ -8,6 +8,7 @@ import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import springboot_ds.koktajle.Response.DrinkResponse;
+import springboot_ds.koktajle.Response.IngredientListResponse;
 import springboot_ds.koktajle.Response.IngredientResponse;
 import springboot_ds.koktajle.model.Ingriedient;
 
@@ -38,6 +39,20 @@ public Mono<DrinkResponse> fetchDrinks(String name){
                 .timeout(Duration.ofSeconds(5))
                 .doOnNext(response -> System.out.println("Fetched Response: " + response));
 }
+
+public Mono<IngredientListResponse> fetchIngredients(){
+        System.out.println("CZAS NA FETCH SKLADNIKOW.");
+        return webClient.get()
+                .uri(uriBuilder -> uriBuilder.
+                        path("/list.php")
+                        .queryParam("i","list")
+                        .build())
+                .retrieve()
+                .bodyToMono(IngredientListResponse.class)
+                .timeout(Duration.ofSeconds(5))
+                .doOnNext(response -> System.out.println("Fetched Response: " + response));
+}
+
 public Mono<IngredientResponse> fetchDrinksByIngredient(String ingredient){
         System.out.println("CZAS NA FETCH PO SKLADNIKU: "+ingredient);
         return webClient.get()

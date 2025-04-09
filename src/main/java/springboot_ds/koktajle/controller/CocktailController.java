@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 import springboot_ds.koktajle.Response.DrinkResponse;
+import springboot_ds.koktajle.Response.IngredientListResponse;
 import springboot_ds.koktajle.Response.IngredientResponse;
 import springboot_ds.koktajle.service.CocktailService;
 
@@ -40,4 +41,11 @@ public class CocktailController {
                 .map(ResponseEntity::ok)
                 .defaultIfEmpty(ResponseEntity.notFound().build());
     }
+    @GetMapping("/api/ingredient_list")
+        public Mono<ResponseEntity<IngredientListResponse>> fetchAllIngredients(){
+            System.out.println("FETCH WSZYSTKICH SKLADNIKOW");
+            return cocktailService.fetchIngredients()
+                    .map(ResponseEntity::ok)
+                    .defaultIfEmpty(ResponseEntity.notFound().build());
+        }
 }
