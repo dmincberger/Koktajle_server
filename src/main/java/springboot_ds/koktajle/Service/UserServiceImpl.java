@@ -1,6 +1,7 @@
 package springboot_ds.koktajle.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import springboot_ds.koktajle.Repository.UserRepository;
 import springboot_ds.koktajle.dto.AdminRequestDto;
@@ -16,9 +17,12 @@ public class UserServiceImpl implements springboot_ds.koktajle.service.UserServi
 
     private final UserRepository userRepository; // repository w którym jest lista na userów i działania na niej
     private final ArrayList<String> expiredTokens = new ArrayList<>(); // lista na wygasłe tokeny
+    private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+
     }
 
     @Override
@@ -32,7 +36,7 @@ public class UserServiceImpl implements springboot_ds.koktajle.service.UserServi
     public void adminCreateUser(AdminRequestDto user) {
         User DBuser = new User();
         DBuser.setEmail(user.getEmail());
-        DBuser.setPassword(user.getPassword());
+        DBuser.setPassword(passwordEncoder.encode(user.getPassword()));
         DBuser.setUsername(user.getUsername());
         DBuser.setConfirmed(user.isConfirmed());
         userRepository.save(DBuser);

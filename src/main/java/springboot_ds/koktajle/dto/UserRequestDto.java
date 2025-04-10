@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 
 public class UserRequestDto {
-    @Email(message = "nazwa usera powinna być poprawnym adresem email")
     private String email;
 
     @NotEmpty(message = "hasło nie może być puste")

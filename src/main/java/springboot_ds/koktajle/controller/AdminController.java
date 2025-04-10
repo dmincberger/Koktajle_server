@@ -4,6 +4,7 @@ package springboot_ds.koktajle.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +25,7 @@ public class AdminController {
     private final EmailOneTimeTokenHandler emailOneTimeTokenHandler;
     @Autowired
     private final UserServiceImpl userServiceImpl;
-    public AdminController(EmailOneTimeTokenHandler emailOneTimeTokenHandler, UserServiceImpl userServiceImpl) {
+    public AdminController(EmailOneTimeTokenHandler emailOneTimeTokenHandler, UserServiceImpl userServiceImpl, PasswordEncoder passwordEncoder) {
         this.emailOneTimeTokenHandler = emailOneTimeTokenHandler;
         this.userServiceImpl = userServiceImpl;
     }

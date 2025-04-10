@@ -31,7 +31,7 @@ public class UserController {
 
     private final static String BASE_URL = "http://localhost:8080"; // to będzie w przyszłości inetaddress
     private final static  long CONFIRMATION_TOKEN_EXPIRATION_TIME = 300000; // 30 sekund na token potwierdzający
-    private final static  long LOGIN_TOKEN_EXPIRATION_TIME = 3000000; // 24 godziny na token po zalogowaniu
+    private final static  long LOGIN_TOKEN_EXPIRATION_TIME = 30000000; // 24 godziny na token po zalogowaniu
 
     private final UserServiceImpl userService;
     private final PasswordEncoder passwordEncoder;
